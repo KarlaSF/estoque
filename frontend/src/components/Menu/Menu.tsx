@@ -4,6 +4,7 @@ import {
   House,
   ShoppingCart,
   UsersRound,
+
 } from 'lucide-react';
 
 import styles from './Menu.module.scss';
@@ -25,7 +26,7 @@ export default function Menu() {
             Home
           </NavLink>
         </li>
-
+        
         <li>
           <NavLink
             to="/estoque"
@@ -65,6 +66,7 @@ export default function Menu() {
             Dashboard
           </NavLink>
         </li>
+
       </ul>
     </nav>
   );

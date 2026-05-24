@@ -1,0 +1,173 @@
+
+//parte de tras das informações
+.container {
+  padding: 32px;
+  background: #f5f6fa;
+  min-height: 100vh;
+}
+
+//corpo
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #4b2e83;
+}
+
+.subtitle {
+  color: #7b728d;
+  margin-top: 4px;
+  margin-bottom: 24px;
+}
+
+//filtros
+.filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  flex: 1;
+
+  background: white;
+
+  padding: 8px 14px;
+
+  border-radius: 14px;
+
+  border: 1px solid #e5e5e5;
+
+  min-height: 40px;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.searchBox input {
+  border: none;
+  outline: none;
+
+  width: 100%;
+
+  font-size: 14px;
+
+  background: transparent;
+
+  color: #333;
+}
+
+.searchBox input::placeholder {
+  color: #999;
+}
+
+.searchBox select {
+  border: none;
+  outline: none;
+
+  width: 100%;
+
+  font-size: 14px;
+
+  background: transparent;
+
+  color: #333;
+
+  cursor: pointer;
+}
+
+
+//cards (total de movimentações e quantidade total em estoque
+.cards {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.card {
+  flex: 1;
+
+  background: white;
+
+  padding: 14px 18px;
+
+  border-radius: 16px;
+
+  min-height: 88px;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.card h3 {
+  color: #6b5b95;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.card strong {
+  font-size: 24px;
+  color: #4b2e83;
+}
+
+.card p {
+  margin-top: 8px;
+  color: #8a8a8a;
+  font-size: 13px;
+}
+
+//estilo da tabela
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+thead {
+  background: #f3efff;
+}
+
+th {
+  text-align: left;
+  padding: 14px 16px;
+  color: #4b2e83;
+  font-size: 13px;
+}
+
+td {
+  padding: 14px 16px;
+  border-top: 1px solid #ececec;
+  font-size: 13px;
+}
+
+tr:hover {
+  background: #faf8ff;
+}
+
+//verde/vermelho
+.statusNormal {
+  background: #e8f8ee;
+  color: #1f9254;
+
+  padding: 6px 12px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusRuptura {
+  background: #fdecec;
+  color: #d11a2a;
+
+  padding: 6px 12px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 600;
+}
