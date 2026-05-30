@@ -1,10 +1,7 @@
-//export default function Reposicao() {
-//  return <div>Reposicao</div>;
-//}
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './Reposicao.module.scss';
 
+// --- Interfaces ---
 interface ProdutoEstoque {
   codigo: string;
   nome: string;
@@ -24,367 +21,310 @@ interface ItemPedido {
 
 interface Pedido {
   id: string;
+  codigoFornecedor: 'FM001' | 'FF001';
   fornecedor: string;
   data: string;
-  tipo: 'Automático' | 'Exceção';
-  status: 'Pendente' | 'Aguardando Aprovação';
+  tipo: 'Automático' | 'Manual';
+  status: 'Realizado' | 'Processando';
   itens: ItemPedido[];
 }
 
-// produtos preenchidos manualmente (CORRIGIR COM BASE NO NOSSO BANCO DE DADOS)
-const CATALOGO_MASTER: ProdutoEstoque[] = [
-  { codigo: '100', nome: 'Perfume SOXERO 100ml masculino', estoqueAtual: 1100, estoqueMinimo: 500, custoUnitario: 45.00 },
-  { codigo: '105', nome: 'Perfume SOXERO 100ml feminino', estoqueAtual: 1155, estoqueMinimo: 500, custoUnitario: 46.20 },
-  { codigo: '110', nome: 'Perfume SOHODOR 100ml masculino', estoqueAtual: 1210, estoqueMinimo: 500, custoUnitario: 47.40 },
-  { codigo: '115', nome: 'Perfume SOHODOR 100ml feminino', estoqueAtual: 0, estoqueMinimo: 500, custoUnitario: 48.60 },
-  { codigo: '120', nome: 'Perfume SOLAVANDO 100ml masculino', estoqueAtual: 1320, estoqueMinimo: 500, custoUnitario: 49.80 },
-  { codigo: '140', nome: 'Perfume SONOAR 100ml masculino', estoqueAtual: 0, estoqueMinimo: 500, custoUnitario: 54.60 },
-  { codigo: '155', nome: 'Perfume SOFRENCIA 100ml feminino', estoqueAtual: 0, estoqueMinimo: 600, custoUnitario: 62.00 },
-  { codigo: '225', nome: 'Perfume SOLAVANDO 50ml feminino', estoqueAtual: 430, estoqueMinimo: 800, custoUnitario: 70.20 },
-  { codigo: '245', nome: 'Perfume SONOAR 50ml feminino', estoqueAtual: 0, estoqueMinimo: 800, custoUnitario: 75.00 },
-  { codigo: '275', nome: 'Perfume SOREZANDO 50ml feminino', estoqueAtual: 710, estoqueMinimo: 800, custoUnitario: 82.20 },
+// Lista Fornecedor - Produto
+const CATALOGO_FORNECEDOR: Omit<ProdutoEstoque, 'estoqueAtual'>[] = [
+  { codigo: '100', nome: 'Perfume SOXERO 100ml masculino', estoqueMinimo: 500, custoUnitario: 45.00 },
+  { codigo: '105', nome: 'Perfume SOXERO 100ml feminino', estoqueMinimo: 500, custoUnitario: 46.20 },
+  { codigo: '110', nome: 'Perfume SOHODOR 100ml masculino', estoqueMinimo: 500, custoUnitario: 47.40 },
+  { codigo: '115', nome: 'Perfume SOHODOR 100ml feminino', estoqueMinimo: 500, custoUnitario: 48.60 },
+  { codigo: '120', nome: 'Perfume SOLAVANDO 100ml masculino', estoqueMinimo: 500, custoUnitario: 49.80 },
+  { codigo: '125', nome: 'Perfume SOLAVANDO 100ml feminino', estoqueMinimo: 500, custoUnitario: 51.00 },
+  { codigo: '130', nome: 'Perfume SONOAR 100ml feminino', estoqueMinimo: 500, custoUnitario: 52.20 },
+  { codigo: '135', nome: 'Perfume SONAREZA 100ml masculino', estoqueMinimo: 500, custoUnitario: 53.40 },
+  { codigo: '140', nome: 'Perfume SONOAR 100ml masculino', estoqueMinimo: 500, custoUnitario: 54.60 },
+  { codigo: '145', nome: 'Perfume SONAREZA 100ml feminino', estoqueMinimo: 500, custoUnitario: 55.80 },
+  { codigo: '150', nome: 'Perfume SOREZANDO 100ml masculino', estoqueMinimo: 500, custoUnitario: 57.00 },
+  { codigo: '155', nome: 'Perfume SOFRENCIA 100ml feminino', estoqueMinimo: 600, custoUnitario: 62.00 },
+  { codigo: '200', nome: 'Perfume SOXERO 50ml masculino', estoqueMinimo: 800, custoUnitario: 65.00 },
+  { codigo: '205', nome: 'Perfume SOXERO 50ml feminino', estoqueMinimo: 800, custoUnitario: 66.20 },
+  { codigo: '210', nome: 'Perfume SOHODOR 50ml masculino', estoqueMinimo: 800, custoUnitario: 67.40 },
+  { codigo: '215', nome: 'Perfume SOHODOR 50ml feminino', estoqueMinimo: 800, custoUnitario: 68.60 },
+  { codigo: '220', nome: 'Perfume SOLAVANDO 50ml masculino', estoqueMinimo: 800, custoUnitario: 69.80 },
+  { codigo: '225', nome: 'Perfume SOLAVANDO 50ml feminino', estoqueMinimo: 800, custoUnitario: 70.20 },
+  { codigo: '230', nome: 'Perfume SONOAR 50ml feminino', estoqueMinimo: 800, custoUnitario: 71.40 },
+  { codigo: '235', nome: 'Perfume SONAREZA 50ml masculino', estoqueMinimo: 800, custoUnitario: 72.60 },
+  { codigo: '240', nome: 'Perfume SONOAR 50ml masculino', estoqueMinimo: 800, custoUnitario: 73.80 },
+  { codigo: '245', nome: 'Perfume SONAREZA 50ml feminino', estoqueMinimo: 800, custoUnitario: 75.00 },
+  { codigo: '250', nome: 'Perfume SOREZANDO 50ml masculino', estoqueMinimo: 800, custoUnitario: 76.20 },
+  { codigo: '275', nome: 'Perfume SOREZANDO 50ml feminino', estoqueMinimo: 800, custoUnitario: 82.20 },
 ];
 
 export const Reposicao: React.FC = () => {
-  // Produtos com estoque BAIXO ou ZERADO
-  const [produtos, setProdutos] = useState<ProdutoEstoque[]>([
-    { codigo: '115', nome: 'Perfume SOHODOR 100ml feminino', estoqueAtual: 0, estoqueMinimo: 500, custoUnitario: 48.60 },
-    { codigo: '140', nome: 'Perfume SONOAR 100ml masculino', estoqueAtual: 0, estoqueMinimo: 500, custoUnitario: 54.60 },
-    { codigo: '225', nome: 'Perfume SOLAVANDO 50ml feminino', estoqueAtual: 430, estoqueMinimo: 800, custoUnitario: 70.20 },
-    { codigo: '245', nome: 'Perfume SONOAR 50ml feminino', estoqueAtual: 0, estoqueMinimo: 800, custoUnitario: 75.00 },
-    { codigo: '275', nome: 'Perfume SOREZANDO 50ml feminino', estoqueAtual: 710, estoqueMinimo: 800, custoUnitario: 82.20 },
-  ]);
-
-  // Pedidos em aberto para reposição
+  const [produtos, setProdutos] = useState<ProdutoEstoque[]>([]);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
-  
-  // Formulario Manual de Gerar Pedido
+  const [carregando, setCarregando] = useState<boolean>(true);
+  const [abaAtiva, setAbaAtiva] = useState<'automatica' | 'manual'>('automatica');
+
+
   const [modalAberto, setModalAberto] = useState<boolean>(false);
   const [formFornecedor, setFormFornecedor] = useState<string>('');
   const [formItens, setFormItens] = useState<ItemPedido[]>([]);
 
-  // Lógica de Alertas de falta de estoque
-  const alertas = produtos.map(p => {
-    let status: 'Ruptura' | 'Reposicao' | 'Normal' = 'Normal';
-    if (p.estoqueAtual === 0) {
-      status = 'Ruptura';
-    } else if (p.estoqueAtual < p.estoqueMinimo) {
-      status = 'Reposicao';
-    }
-    return { ...p, status, sugestao: p.estoqueMinimo };
-  }).filter(a => a.status === 'Ruptura' || a.status === 'Reposicao');
+  //SIMULAÇÃO DE PEDIDO
+  useEffect(() => {
+    setTimeout(() => {
+      setProdutos([
+        { codigo: '115', nome: 'Perfume SOHODOR 100ml feminino', estoqueAtual: 530, estoqueMinimo: 500, custoUnitario: 48.60 },
+        { codigo: '155', nome: 'Perfume SOFRENCIA 100ml feminino', estoqueAtual: 210, estoqueMinimo: 600, custoUnitario: 62.00 },
+        { codigo: '140', nome: 'Perfume SONOAR 100ml masculino', estoqueAtual: 620, estoqueMinimo: 500, custoUnitario: 54.60 },
+      ]);
+      setCarregando(false);
+    }, 600);
+  }, []);
 
-  //  PASSO 1: Gerar Pedido Automático
-  const handleGerarPedidoAutomatico = () => {
-    if (alertas.length === 0) return;
+  //Reposição Automática (5s)
+useEffect(() => {
+    if (produtos.length === 0) return;
 
-    // Evita gerar duplicado se já houver um automático pendente
-    if (pedidos.some(p => p.tipo === 'Automático')) return;
+    produtos.forEach(prod => {
+      if (prod.estoqueAtual < prod.estoqueMinimo) {
+        const jaTemPedido = pedidos.some(p => p.itens.some(i => i.codigo === prod.codigo));
+        
+        if (!jaTemPedido) {
+          const ehFeminino = prod.nome.toLowerCase().includes('feminino');
+          const codForn = ehFeminino ? 'FF001' : 'FM001';
+          const nomeForn = ehFeminino ? 'FORNFEM LTDA' : 'FORNMASC LTDA';
+          const qtdRepor = prod.estoqueMinimo;
+          const idPedido = `AUTO-${prod.codigo}-${codForn}`;
 
-    const novoPedidoAuto: Pedido = {
-      id: `comp-auto-${Date.now()}`,
-      fornecedor: 'FORNMASC LTDA',
-      data: '24/05/2026',
-      tipo: 'Automático',
-      status: 'Pendente',
-      itens: alertas.map(a => ({
-        id: Math.random().toString(),
-        codigo: a.codigo,
-        produto: a.nome,
-        quantidade: a.sugestao,
-        custoUnit: a.custoUnitario,
-        total: a.sugestao * a.custoUnitario
-      }))
-    };
+          const novoPedido: Pedido = {
+            id: idPedido,
+            codigoFornecedor: codForn,
+            fornecedor: nomeForn,
+            data: new Date().toLocaleDateString('pt-BR'),
+            tipo: 'Automático',
+            status: 'Processando',
+            itens: [{ 
+              id: Math.random().toString(), 
+              codigo: prod.codigo, 
+              produto: prod.nome, 
+              quantidade: qtdRepor, 
+              custoUnit: prod.custoUnitario, 
+              total: qtdRepor * prod.custoUnitario 
+            }]
+          };
 
-    setPedidos([...pedidos, novoPedidoAuto]);
+          setPedidos(prev => [novoPedido, ...prev]);
+
+          setTimeout(() => {
+            setProdutos(prev => prev.map(p => p.codigo === prod.codigo ? { ...p, estoqueAtual: p.estoqueAtual + qtdRepor } : p));
+            setPedidos(prev => prev.map(p => p.id === idPedido ? { ...p, status: 'Realizado' } : p));
+          }, 5000);
+        }
+      }
+    });
+  }, [produtos, pedidos]);
+
+  const alertasFiltro = produtos.filter(p => {
+    const pedidoRelacionado = pedidos.find(ped => ped.itens.some(i => i.codigo === p.codigo));
+    if (!pedidoRelacionado) return p.estoqueAtual < p.estoqueMinimo;
+    return pedidoRelacionado.status !== 'Realizado';
+  });
+
+  const simularVenda = () => {
+    setProdutos(prev => prev.map(p => p.codigo === '115' ? { ...p, estoqueAtual: p.estoqueAtual - 300 } : p));
   };
 
-  //Ação do formulario de pedido de compra individual
-  const handleAbrirModal = () => {
-    setFormFornecedor('');
-    setFormItens([]);
-    setModalAberto(true);
-  };
-
-  const handleAdicionarItemForm = () => {
-    const novoItemForm: ItemPedido = {
-      id: Date.now().toString() + Math.random(),
-      codigo: '',
-      produto: '',
-      quantidade: 0,
-      custoUnit: 0,
-      total: 0
-    };
-    setFormItens([...formItens, novoItemForm]);
-  };
-
-  const handleRemoverItemForm = (id: string) => {
-    setFormItens(formItens.filter(item => item.id !== id));
+  const handleAdicionarLinhaForm = () => {
+    setFormItens([...formItens, { id: Math.random().toString(), codigo: '', produto: '', quantidade: 0, custoUnit: 0, total: 0 }]);
   };
 
   const handleSelecionarProdutoForm = (id: string, codigo: string) => {
-    const produtoMaster = CATALOGO_MASTER.find(p => p.codigo === codigo);
-    if (!produtoMaster) return;
+    const itemMaster = CATALOGO_FORNECEDOR.find(c => c.codigo === codigo);
+    if (!itemMaster) return;
 
-    setFormItens(formItens.map(item => {
-      if (item.id === id) {
-        const quantidadeSugerida = produtoMaster.estoqueMinimo;
-        return {
-          ...item,
-          codigo: produtoMaster.codigo,
-          produto: produtoMaster.nome,
-          quantidade: quantidadeSugerida,
-          custoUnit: produtoMaster.custoUnitario,
-          total: quantidadeSugerida * produtoMaster.custoUnitario
-        };
-      }
-      return item;
-    }));
+    setFormItens(formItens.map(i => i.id === id ? {
+      ...i,
+      codigo: itemMaster.codigo,
+      produto: itemMaster.nome,
+      quantidade: itemMaster.estoqueMinimo, 
+      custoUnit: itemMaster.custoUnitario,
+      total: itemMaster.estoqueMinimo * itemMaster.custoUnitario
+    } : i));
   };
 
   const handleAtualizarQuantidadeForm = (id: string, qtd: number) => {
-    setFormItens(formItens.map(item => {
-      if (item.id === id) {
-        return {
-          ...item,
-          quantidade: qtd,
-          total: qtd * item.custoUnit
-        };
-      }
-      return item;
-    }));
+    setFormItens(formItens.map(i => i.id === id ? { ...i, quantidade: qtd, total: qtd * i.custoUnit } : i));
   };
 
-  const handleGerarPedidoExcecao = () => {
+  const handleConfirmarManual = () => {
     if (!formFornecedor || formItens.length === 0 || formItens.some(i => !i.codigo)) return;
 
-    const novoPedidoExcecao: Pedido = {
-      id: `comp-exc-${Date.now()}`,
+    const codForn = formFornecedor === 'FORNMASC LTDA' ? 'FM001' : 'FF001';
+    const primCodigoProd = formItens[0].codigo;
+    const idManual = `MAN-${primCodigoProd}-${codForn}`;
+
+    const novoManual: Pedido = {
+      id: idManual,
+      codigoFornecedor: codForn,
       fornecedor: formFornecedor,
-      data: '24/05/2026',
-      tipo: 'Exceção',
-      status: 'Aguardando Aprovação',
+      data: new Date().toLocaleDateString('pt-BR'),
+      tipo: 'Manual',
+      status: 'Realizado',
       itens: formItens
     };
 
-    setPedidos([...pedidos, novoPedidoExcecao]);
+    setProdutos(prev => {
+      return prev.map(prod => {
+        const itemCorrespondente = formItens.find(i => i.codigo === prod.codigo);
+        if (itemCorrespondente) {
+          return { ...prod, estoqueAtual: prod.estoqueAtual + itemCorrespondente.quantidade };
+        }
+        return prod;
+      });
+    });
+
+    setPedidos(prev => [novoManual, ...prev]);
     setModalAberto(false);
   };
 
-  //Marca como RECEBEIDO quando chegar a aprovação do financeiro
-  const handleMarcarComoRecebido = (idPedido: string) => {
-    const pedidoAlvo = pedidos.find(p => p.id === idPedido);
-    if (!pedidoAlvo) return;
+  const formatarMoeda = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    // Faz a soma dos itens recebidos ao estoque atual
-    const estoqueAtualizado = produtos.map(prod => {
-      const itemCorrespondente = pedidoAlvo.itens.find(i => i.codigo === prod.codigo);
-      if (itemCorrespondente) {
-        return {
-          ...prod,
-          estoqueAtual: prod.estoqueAtual + itemCorrespondente.quantidade
-        };
-      }
-      return prod;
-    });
-
-    setProdutos(estoqueAtualizado);
-    // Remove o pedido finalizado da listagem da tela
-    setPedidos(pedidos.filter(p => p.id !== idPedido));
-  };
-
-  const formatarMoeda = (valor: number) => {
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
+  if (carregando) return <div className={styles.container}>Conectando ao banco de dados...</div>;
 
   return (
     <div className={styles.container}>
-      {/* Topo da Página */}
       <header className={styles.headerPagina}>
         <div className={styles.titulos}>
           <h1>Reposição de Estoque</h1>
-          <p>Gerencie alertas e pedidos de compra para fornecedores</p>
+          <p>Painel geral de ordens de entrada e compras processadas</p>
         </div>
         <div className={styles.acoes}>
-          {!pedidos.some(p => p.tipo === 'Automático') && (
-            <button className={styles.btnAutomatico} onClick={handleGerarPedidoAutomatico}>
-              ⚠️ Gerar Pedido Automático
-            </button>
-          )}
-          <button className={styles.btnNovo} onClick={handleAbrirModal}>
+          <button className={styles.btnSimular} onClick={simularVenda}>⚡ Simular Venda (-300 un)</button>
+          <button className={styles.btnNovo} onClick={() => { setFormFornecedor(''); setFormItens([]); setModalAberto(true); }}>
             + Novo Pedido de Compra
           </button>
         </div>
       </header>
 
-      {/* Seção de Alertas */}
+      {/* Seção dos Alertas De reposição*/}
       <section className={styles.cardAlertasContainer}>
-        <div className={styles.tituloSecaoAlertas}>
-          <span>⚠️</span>
-          <h2>Alertas de Reposição ({alertas.length})</h2>
-        </div>
-
-        {alertas.length === 0 ? (
-          <p style={{ margin: 0, color: '#1db970', fontWeight: 500 }}>
-            🎉 Excelente! Todos os produtos estão com níveis de estoque seguros.
-          </p>
-        ) : (
-          <div className={styles.gridAlertas}>
-            {alertas.map((alerta) => (
-              <div key={alerta.codigo} className={styles.cardAlertaItem}>
-                <div className={styles.topoAlertaItem}>
-                  <span className={styles.nomeProdutoAlertado}>
-                    {alerta.codigo} - {alerta.nome}
-                  </span>
-                  <span className={`${styles.badge} ${alerta.status === 'Ruptura' ? styles.badgeRuptura : styles.badgeReposicao}`}>
-                    {alerta.status === 'Ruptura' ? 'Ruptura' : 'Reposição'}
-                  </span>
-                </div>
-                <div className={styles.corpoAlertaItem}>
-                  <p>Estoque: {alerta.estoqueAtual} / Mínimo: {alerta.estoqueMinimo}</p>
-                  <span className={styles.sugestaoTexto}>Sugestão: {alerta.sugestao} unidades</span>
-                </div>
+        <div className={styles.tituloSecaoAlertas}><h2>⚠️ Monitoramento de Reposição Crítica</h2></div>
+        <div className={styles.gridAlertas}>
+          {alertasFiltro.map(p => (
+            <div key={p.codigo} className={styles.cardAlertaItem}>
+              <div className={styles.topoAlertaItem}>
+                <strong>{p.codigo} - {p.nome}</strong>
+                <span className={styles.badgeReposicao}>Abaixo do Mínimo</span>
               </div>
-            ))}
-          </div>
-        )}
+              <p>Estoque Físico: <span className={styles.dangerText}>{p.estoqueAtual} un</span> / Limite Mínimo: {p.estoqueMinimo} un</p>
+            </div>
+          ))}
+          {alertasFiltro.length === 0 && (
+            <p className={styles.txtSucesso}>✓ Todos os produtos encontram-se acima da margem mínima estabelecida.</p>
+          )}
+        </div>
       </section>
 
-      {/* Listagem Dinâmica de Pedidos Pendentes */}
-      {pedidos.map((pedido) => {
-        const valorTotalPedido = pedido.itens.reduce((acc, item) => acc + item.total, 0);
+      {/* Reposições realizadas */}
+      <section className={styles.containerAbasPedidos}>
+        <div className={styles.headerAbas}>
+          <button className={abaAtiva === 'automatica' ? styles.abaAtiva : ''} onClick={() => setAbaAtiva('automatica')}>
+            Pedidos de Reposição Automática ({pedidos.filter(p => p.tipo === 'Automático').length})
+          </button>
+          <button className={abaAtiva === 'manual' ? styles.abaAtiva : ''} onClick={() => setAbaAtiva('manual')}>
+            Pedidos de Reposição Manual ({pedidos.filter(p => p.tipo === 'Manual').length})
+          </button>
+        </div>
 
-        return (
-          <section key={pedido.id} className={styles.cardPedidoAutomatico}>
-            <div className={styles.headerPedidoSecao}>
-              <h2>Pedidos de Reposição Automática</h2>
-              <p>Pedidos gerados automaticamente com base nos alertas de estoque</p>
-            </div>
-
-            <div className={styles.boxPedido}>
+        <div className={styles.conteudoAba}>
+          {(abaAtiva === 'automatica' ? pedidos.filter(p => p.tipo === 'Automático') : pedidos.filter(p => p.tipo === 'Manual')).map(pedido => (
+            <div key={pedido.id} className={styles.boxPedido}>
               <div className={styles.topoBoxPedido}>
-                <div className={styles.infoMetaPedido}>
-                  <h3>
-                    Pedido <span>#{pedido.id}</span>
-                    <span className={styles.tagAutomatico}>{pedido.tipo}</span>
-                  </h3>
-                  <p>Fornecedor: {pedido.fornecedor}</p>
-                  <p>Data: {pedido.data}</p>
+                <div>
+                  <h3>{pedido.fornecedor} <span className={styles.idPedido}>#{pedido.id}</span></h3>
+                  <p>Data do Recebimento: {pedido.data} | Cód Fornecedor: {pedido.codigoFornecedor}</p>
                 </div>
-                <div className={styles.statusFinanceiroBlock}>
-                  <span className={pedido.status === 'Pendente' ? styles.badgePendente : styles.badgeAguardando}>
-                    {pedido.status}
-                  </span>
-                  <button className={styles.btnMarcarRecebido} onClick={() => handleMarcarComoRecebido(pedido.id)}>
-                    Marcar como Recebido
-                  </button>
-                </div>
+                {pedido.status === 'Realizado' ? (
+                  <span className={styles.badgeAbastecido}>✓ Realizado / Estoque Abastecido</span>
+                ) : (
+                  <span className={styles.badgeEmAndamento}>⚙ Realizando reposição...</span>
+                )}
               </div>
 
-              <div className={styles.wrapperTabela}>
-                <table className={styles.tabelaPedido}>
-                  <thead>
-                    <tr>
-                      <th>PRODUTO</th>
-                      <th>QUANTIDADE</th>
-                      <th>CUSTO UNIT.</th>
-                      <th>TOTAL</th>
+              <table className={styles.tabelaPedido}>
+                <thead>
+                  <tr>
+                    <th>CÓDIGO</th>
+                    <th>PRODUTO</th>
+                    <th>QUANTIDADE REPOSTA</th>
+                    <th>CUSTO UNIT.</th>
+                    <th>VALOR TOTAL BRUTO</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pedido.itens.map((item, idx) => (
+                    <tr key={idx}>
+                      <td className={styles.codTabela}>{item.codigo}</td>
+                      <td>{item.produto}</td>
+                      <td>{item.quantidade} un</td>
+                      <td>{formatarMoeda(item.custoUnit)}</td>
+                      <td>{formatarMoeda(item.total)}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {pedido.itens.map((item, idx) => (
-                      <tr key={idx}>
-                        <td className={styles.nomeTabelaProd}>{item.produto}</td>
-                        <td>{item.quantidade}</td>
-                        <td>{formatarMoeda(item.custoUnit)}</td>
-                        <td className={styles.valorTotalItem}>{formatarMoeda(item.total)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className={styles.rodapeTotalPedido}>
-                <span>Valor Total:</span>
-                <strong>{formatarMoeda(valorTotalPedido)}</strong>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </section>
-        );
-      })}
+          ))}
+          {abaAtiva === 'automatica' && pedidos.filter(p => p.tipo === 'Automático').length === 0 && <p className={styles.txtVazio}>Nenhuma entrada automática registrada.</p>}
+          {abaAtiva === 'manual' && pedidos.filter(p => p.tipo === 'Manual').length === 0 && <p className={styles.txtVazio}>Nenhuma entrada manual registrada.</p>}
+        </div>
+      </section>
 
-      {/* MODAL DO FORMULÁRIO DE EXCEÇÃO */}
+      {/*Aba Manual*/}
       {modalAberto && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
-              <h2>Novo Pedido de Compra (Exceção)</h2>
-              <button className={styles.btnFecharModal} onClick={() => setModalAberto(false)}>×</button>
+              <h2>Novo Pedido de Compra (Exceção Manual)</h2>
+              <button onClick={() => setModalAberto(false)}>×</button>
             </div>
-
-            <div className={styles.modalCorpo}>
-              <div className={styles.campoForm}>
+            <div className={styles.modalBody}>
+              <div className={styles.campo}>
                 <label>Fornecedor</label>
-                <select value={formFornecedor} onChange={(e) => setFormFornecedor(e.target.value)}>
-                  <option value="">Selecione um fornecedor...</option>
-                  <option value="FORNMASC LTDA">FORNMASC LTDA</option>
-                  <option value="FORNFEM LTDA">FORNFEM LTDA</option>
+                <select value={formFornecedor} onChange={e => setFormFornecedor(e.target.value)}>
+                  <option value="">Selecione o Fornecedor...</option>
+                  <option value="FORNMASC LTDA">FORNMASC LTDA (Cód: FM001)</option>
+                  <option value="FORNFEM LTDA">FORNFEM LTDA (Cód: FF001)</option>
                 </select>
               </div>
-
-              <div className={styles.linhaTituloItens}>
-                <h3>Itens do Pedido</h3>
-                <button type="button" className={styles.btnAdicionarItem} onClick={handleAdicionarItemForm}>
-                  + Adicionar Item
-                </button>
+              <div className={styles.linhaItensHeader}>
+                <h3>Itens da Ordem de Compra</h3>
+                <button onClick={handleAdicionarLinhaForm}>+ Adicionar Linha</button>
               </div>
-
               <div className={styles.listaItensForm}>
-                {formItens.map((item) => (
-                  <div key={item.id} className={styles.itemFormLinha}>
-                    <select 
-                      value={item.codigo} 
-                      onChange={(e) => handleSelecionarProdutoForm(item.id, e.target.value)}
-                    >
-                      <option value="">Selecione um produto do catálogo...</option>
-                      {CATALOGO_MASTER.map(c => (
-                        <option key={c.codigo} value={c.codigo}>
-                          {c.codigo} - {c.nome} (Estoque: {c.estoqueAtual})
-                        </option>
+                {formItens.map(item => (
+                  <div key={item.id} className={styles.linhaItemForm}>
+                    <select value={item.codigo} onChange={e => handleSelecionarProdutoForm(item.id, e.target.value)}>
+                      <option value="">Escolha o Produto...</option>
+                      {CATALOGO_FORNECEDOR.map(c => (
+                        <option key={c.codigo} value={c.codigo}>{c.codigo} - {c.nome}</option>
                       ))}
                     </select>
-
                     <input 
                       type="number" 
-                      placeholder="Qtd"
-                      min="1"
                       value={item.quantidade || ''} 
-                      onChange={(e) => handleAtualizarQuantidadeForm(item.id, Number(e.target.value))}
+                      placeholder="Qtd" 
+                      onChange={e => handleAtualizarQuantidadeForm(item.id, Number(e.target.value))} 
                     />
-
-                    <span className={styles.precoItemForm}>
-                      {formatarMoeda(item.total)}
-                    </span>
-
-                    <button type="button" className={styles.btnRemoverItem} onClick={() => handleRemoverItemForm(item.id)}>
-                      ×
-                    </button>
+                    <span>{formatarMoeda(item.total)}</span>
                   </div>
                 ))}
-                {formItens.length === 0 && (
-                  <p className={styles.txtVazio}>Nenhum item adicionado a este pedido de exceção.</p>
-                )}
               </div>
             </div>
-
-            <div className={styles.modalRodape}>
-              <div className={styles.totalGeralModal}>
-                Total Geral: <strong>{formatarMoeda(formItens.reduce((acc, curr) => acc + curr.total, 0))}</strong>
-              </div>
-              <div className={styles.botoesModal}>
-                <button className={styles.btnCancelar} onClick={() => setModalAberto(false)}>Cancelar</button>
-                <button className={styles.btnConfirmar} onClick={handleGerarPedidoExcecao}>Gerar Pedido</button>
+            <div className={styles.modalFooter}>
+              <span>Total Geral: <strong>{formatarMoeda(formItens.reduce((acc, i) => acc + i.total, 0))}</strong></span>
+              <div>
+                <button onClick={() => setModalAberto(false)}>Cancelar</button>
+                <button className={styles.btnConfirmar} onClick={handleConfirmarManual}>Enviar Solicitação</button>
               </div>
             </div>
           </div>
